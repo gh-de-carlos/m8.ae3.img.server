@@ -28,8 +28,8 @@ En este ejercicio grupal, el equipo desarrollará una aplicación Express avanza
 ### 4. Validación de formatos de archivo y tamaños
 
 - Los archivos deben cumplir con ciertos requisitos:
-  - Las extensiones permitidas deben ser `.jpg`, `.png`, `.gif`, `.pdf`, `.txt`.
-  - El tamaño máximo del archivo debe ser de 5 MB.
+    - Las extensiones permitidas deben ser `.jpg`, `.png`, `.gif`, `.pdf`, `.txt`.
+    - El tamaño máximo del archivo debe ser de 5 MB.
 - Si el archivo no cumple con estos criterios, debe devolver un mensaje de error adecuado, indicando cuál es el problema (extensión no permitida o tamaño excedido).
 - Validación adicional personal: utilizar una librería para verificar el MIME type y que no te *pasen gato por liebre*. Por ejemplo `mime-types`.
 
@@ -86,20 +86,29 @@ Estos atributos deben ser enviados al cliente en una respuesta JSON junto con el
 5. Si pasa las validaciones de MIME type, extensión y tamaño, se genera el nuevo nombre (ver [abajo](#sobre-el-renombrado)) y se procede a almacenar el archivo en el directorio `/uploads`
 6. Si no pasa las validaciones, se envía el error correspondiente en la `response`. 
 7. Si la operación de escritura fue exitosa, se procede a crear un query para la base de datos que contiene:
-  - el nombre interno del archivo (`name`).
-  - el nombre original (`mask_name`)
-  - la ruta relativa (`path`)
-  - el MIME type obtenido de la firma del archivo (número mágico) (`mime`)
-  - el tamaño del archivo en bytes (`size`)
+    - el nombre interno del archivo (`name`).
+    - el nombre original (`mask_name`)
+    - la ruta relativa (`path`)
+    - el MIME type obtenido de la firma del archivo (número mágico) (`mime`)
+    - el tamaño del archivo en bytes (`size`)
 8. Si la escritura no fue exitosa, se envía el código de error correspondiente.
 9. Se envía la query y si la operación de registro es exitosa, se culmina con la respuesta al cliente.
-10. Si la query falla en almacenarse en la bd, se eliminar el archivo `fs.unlink()` y se envía la respuesta al cliente.
+10. Si la query falla en almacenarse en la bd, se elimina el archivo `fs.unlink()` y se envía la respuesta al cliente.
 
 #### DELETE /delete/:filename
 
 **Renombraré este endpoint por** `DELETE /images/:filename`, por los mismos motivos anteriores.
 
-Este método estará implementado de forma limpia en un botón de eliminar con el evento `'click'` asociado al handler `deleteImg(event)`. Este capturará el nombre real del archivo de un atributo `data-name="..."` en el botón y lo enviará bajo el método correcto usando `fetch`.
+Este método estará implementado de forma limpia en un botón de eliminar con el evento `'click'` asociado al handler `deleteImg(event)`. Este capturará el nombre real del archivo de un atributo `data-name="..."` en el botón y lo enviará bajo el método correcto usando `fetch`. El proceso en el servidor seguirá el mismo patrón "trasaccional" de la creación:
+
+1. El servidor recibe la request.
+2. Se procede a buscar el nombre. Si no existe, enviar el error correspondiente en la `response`.
+3. Si el archivo existe, crear la query para eliminar el registro de la bd. Mantener los datos en un objeto por si es necesario hacer *rollback* del proceso.
+4. Se envía la query y si su resultado es exitoso, se procede con el punto 6.
+5. Si la query no fue exitosa, se envía el error en la `response`.
+6. La query fue exitosa, por lo que ahora toca eliminar `fs.unlink()` el archivo.
+7. Si se elimina exitosamente, se envía la response al cliente.
+8. Si no se logra eliminar el archivo, se crea una query para volver a guardar el registro y se envía el código de error.
 
 ### Sobre el renombrado
 
