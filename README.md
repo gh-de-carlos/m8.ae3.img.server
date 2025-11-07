@@ -108,7 +108,12 @@ Este método estará implementado de forma limpia en un botón de eliminar con e
 5. Si la query no fue exitosa, se envía el error en la `response`.
 6. La query fue exitosa, por lo que ahora toca eliminar `fs.unlink()` el archivo.
 7. Si se elimina exitosamente, se envía la response al cliente.
-8. Si no se logra eliminar el archivo, se crea una query para volver a guardar el registro y se envía el código de error.
+8. Si no se logra eliminar el archivo, se crea una query para volver a guardar el registro y esta parte es tricky:
+    1. Si la query es exitosa, se envía el código de error interno correspondiente al usario.
+    2. Pero si no, estamos en un escenario de inconsistencia en la integridad de datos por lo tanto:
+    3. Se utiliza una segunda tabla "cleanup_queue" que registra solo `name` el nombre real del archivo inconsistente un timestamp del fallo.
+    4. Se retorna un error 500 al usuario, y se le advierte un fallo crítico en el sistema.
+    5. Se crea un proceso separado que corre bajo un `cron` o `setInterval` para intentar eliminar constantemente los archivos en esa tabla.
 
 ### Sobre el renombrado
 
