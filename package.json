@@ -7,6 +7,20 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prestart": "echo 'Noh juimoh 😁🫰...'",
+    "test": "node tests/database.test.js",
+    "test:db": "node tests/database.test.js",
+    "db:init": "node tests/database.test.js",
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mime-types": "^3.0.1",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "sharp": "^0.34.5",
+    "uuid": "^13.0.0"
   }
 }

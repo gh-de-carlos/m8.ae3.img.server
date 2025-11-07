@@ -1,7 +1,10 @@
 # M8.AE3 Subiendo imágenes con fileupload.
 
-Carlos Pizarro Morales.  
-...
+*Porque "entrete" nunca es malo, y siempre es bueno.*
+
+**Por:**   
+Carlos Pizarro Morales.   
+...(hay espacio para tí, oe!!)
 
 ## Contexto
 
@@ -121,7 +124,9 @@ El renombrado consiste en eliminar completamente el nombre original del archivo,
 
 ### Sobre el uso de una BD. 
 
-El aspecto más relevante de las diferencias en mi implementación es que he decidido utilizar una pequeña base de datos (m8_img_server) para manejar los nombres de archivo. Esta contiene una sola tabla (por ahora) con los siguientes campos:
+El aspecto más relevante de las diferencias en mi implementación es que he decidido utilizar una pequeña base de datos (m8_img_server) para manejar los nombres de archivo. Esta contiene dos tablas con los siguientes campos:
+
+#### images_metadata
 
 1. `name` (VARCHAR) combinación de `timestamp + uuid` generado en el servidor antes de almacenar. `PK`
 2. `mask_name`: el nombre original que será servido al cliente para utilizar en el frontend.
@@ -130,6 +135,84 @@ El aspecto más relevante de las diferencias en mi implementación es que he dec
 5. `size`: el tamaño del archivo en bytes. 
 6. `createdAt` para el registro interno de la base de datos.
 
+
+#### cleanup_queue
+
+Tabla para almacenar los borrados en estado inconsistente. Probablemente tendrá muy pocos registros idealmente nunca y serán monitoreados por un proceso regular que intentará eliminar los archivos si aún existen.
+
+1. `name` el mismo `name` de la tabla `images_metadata`
+2. `fail_time` timestamp del error en el borrado.
+3. `delete_state` success/failed para intentos repetidos posteriores.
+
+- No se eliminarán los registros, solo se cambiará su estado en delete_state.
+- Otro proceso, **fuera del scope de este proyecto**, respaldará y truncará esta tabla para comenzar limpio con la frecuencia que la lógica de ese proceso indique (tiempo/almacenamiento).
+
 ### Sobre las validaciones
 
 No hay mucho que decir excepto: **no confies en el usuario, no confíes en el browser**. Leer más [**acá**](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
+
+### Sobre el uso de sharp
+
+TODO completar acá, idea: select con opt-in para modificar al subir.
+
+## Implementación
+
+```bash
+# Crea el entorno
+mkdir m8.ae3.fileupload
+cd m8.ae3.fileupload
+touch README.md
+
+# Inicia el proyeto. No seas floj@, no uses -y
+npm init
+
+# Instala dependencias.
+npm install express multer sharp pg dotenv uuid mime-types
+
+# Crea la BD
+sudo -i -u postgres
+psql
+# CREATE DATABASE m8_img_server [WITH OWNER=you];
+# \q
+exit
+
+# Crea la estructura base
+touch server.js
+mkdir controllers routes config uploads utils .devutils
+
+# Comencemos con git
+git init
+touch .gitignore
+
+# Crea un archivo .gitkeep en /uploads (nuevo para mi)
+touch uploads/.gitkeep 
+
+# Creemos el .env para la BD
+touch .env
+cp .env .env.example
+
+# Initial configs
+touch database.js
+touch serverConfig.js
+
+# Initial testing
+mkdir tests
+touch tests/database.test.js
+touch README.md
+
+# Also create an entry in package.json
+# "scripts": { ..., "db:init": "node tests/database.test.js", ... }
+npm run db:init
+
+# Revisamos que de verdad el test hizo lo que dice que hizo.
+# Crítico en el primer trip para no hacer tests alucinatorios.
+sudo -u postgres psql m8_img_server -c "\dt+"
+
+# Ahora nos volvemos monos 🐒🐵 Let's go nuts!...
+touch /controllers/middlewareControllers.js
+touch /controllers/rootControllers.js
+touch /routes/imageRoutes.js
+
+# Un juguete hermoso para reciclar..
+touch /utils/logger.js
+```
