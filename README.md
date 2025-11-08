@@ -194,6 +194,8 @@ Las validaciones son un poco más complejas de lo que propone el ejercicio, util
 
 Se ha intentado seguir el principio: **no confies en el usuario, no confíes en el browser** del que puedes leer más [**acá**](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html). Por lo demás, se han cubierto las otras validaciones sugeridas cuando no entran en conflicto con la implementación (no se validado que el nombre existe porque el sistema nunca utiliza el nombre original para nada internamente, solo como metadata)
 
+Otra cosa, es que cambié el tamaño máximo de imagen a 3MB porque es un poco difícil buscar imágenes en la web de ese tamaño, y weno, por que si, es mi proyecto. 😅
+
 ### Sobre el uso de sharp
 
 Los requisitos no indican bien cómo implementar la utilización de `sharp` así que se decidido lo siguiente:
@@ -342,6 +344,12 @@ touch utils/validationUtils.js
 # que algunos sistemas automatizados de despliegue usan 
 # el package.json::engines, así que mejor aún.
 touch .nvmrc
+
+# Se ha centralizado la administración de números mágicos
+# en /config/constants/index.js para cambiar fácilmente
+# cualquier parámetro sin tocar mucho.
+mkdir config/constants
+touch config/constants/index.js
 ```
 
 ## Cómo utilizar
@@ -401,6 +409,8 @@ GET /images/stats/storage
 
 ### Ejemplos de uso
 
+#### Subir una imagen:
+
 ```bash
 # Se supone que estás en el root y usarás la imagen en /tests/assets/
 curl http://localhost:3000/images -F "image=@tests/assets/img.1.png" | jq
@@ -409,27 +419,42 @@ curl http://localhost:3000/images -F "image=@tests/assets/img.1.png" | jq
 curl http://localhost:3000/images?convert=webp -F "image=@tests/assets/img.3.png" | jq
 ```
 
-**SAPEA:**  
+**RESULTADO:**  
 ![captura_de_subida](./utils/docs/screenshot.2.png)
 
-Ahora, supongamos que quieres eliminar una imagen:
+------
+
+#### Eliminar una imagen:
 
 ```bash
 curl -X DELETE http://localhost:3000/[filename] | jq
 ```
 
-**SAPEA:**  
+**RESULTADO:**  
 ![captura_de_eliminado](./utils/docs/screenshot.3.png)
 
-Ahora, te las quieres dar de hacker y cambias la extensión de archivo de un script malicioso:
+-----
+
+#### Archivo con MIME disfrazado.
 
 ```bash
 curl http://localhost:3000/images -F "image=@tests/assets/malicious.image.png.js;filename=malicious.me.png" | jq
 ```
 
-**SAPEA:**  
+**RESULTADO:**  
 ![captura_de_eliminado](./utils/docs/screenshot.1.png)
 
+------
+
+#### Subir imagen de más de 5MB:
+
+```bash
+# Se supone que estás en el root y usarás la imagen en /tests/assets/
+curl http://localhost:3000/images -F "image=@tests/assets/img.4.png" | jq
+```
+
+**RESULTADO:**  
+![captura_de_subida](./utils/docs/screenshot.4.png)
 
 
 
